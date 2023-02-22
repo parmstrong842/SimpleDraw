@@ -3,8 +3,7 @@ package com.example.simpledraw.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color.argb
-import android.graphics.Color.rgb
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.Log
@@ -18,40 +17,28 @@ class CanvasView(context: Context, tPoints: List<Point>, val AddPointToViewModel
 
     private val paths: MutableList<PathWrapper> = mutableListOf()
 
-
-    var strokeWidth = 10f
-        set(value) {
-            field = value
-            paint = updatePaint()
-        }
-    var color = argb(255, 255, 0, 0)
-        set(value) {
-            field = value
-            paint = updatePaint()
-        }
-
-    var bgColor = rgb(255, 255, 255)
-
-    private var paint = Paint()
-
-    private fun updatePaint() = Paint().apply {
-        this.color = color
-        this.strokeWidth = strokeWidth
-        this.style = Paint.Style.STROKE
-    }
+    var currentStrokeWidth = 10f
+    var currentColor = Color.RED
+    var currentBgColor = Color.rgb(255, 255, 255)
 
     private fun updateLatestPath(newPoint: Point) {
-        paths.last().path.lineTo(newPoint.x.toFloat(), newPoint.y.toFloat())
+        val path = paths.last().path
+        if (path.isEmpty) {
+            path.moveTo(newPoint.x, newPoint.y)
+        } else {
+            path.lineTo(newPoint.x, newPoint.y)
+        }
         invalidate()
     }
 
-    private fun insertNewPath(newPoint: Point) {
+    private fun startNewPath(newPoint: Point) {
         val pathWrapper = PathWrapper(
-            path = startNewPath(newPoint),
+            path = Path(),
+            startPoint = newPoint,
             paint = Paint().apply {
                 this.style = Paint.Style.STROKE
-                this.color = color
-                this.strokeWidth = strokeWidth
+                this.color = currentColor
+                this.strokeWidth = currentStrokeWidth
             }
         )
         paths.add(pathWrapper)
@@ -60,18 +47,12 @@ class CanvasView(context: Context, tPoints: List<Point>, val AddPointToViewModel
 
     override fun onDraw(canvas: Canvas) {
         paths.forEach {
-            canvas.drawPath(it.path, it.paint)
+            if (!it.path.isEmpty) {
+                canvas.drawPath(it.path, it.paint)
+            } else {
+                canvas.drawCircle(it.startPoint.x, it.startPoint.y, it.paint.strokeWidth, it.paint)
+            }
         }
-    }
-
-    private fun startNewPath(newPoint: Point) = Path().apply {
-        this.moveTo(newPoint.x, newPoint.y)
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        paint.strokeWidth = strokeWidth
-        paint.color = color
-        paint.style = Paint.Style.STROKE
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -83,7 +64,7 @@ class CanvasView(context: Context, tPoints: List<Point>, val AddPointToViewModel
         return when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 Log.d(tag, "Action was DOWN")
-                insertNewPath(Point(x, y))
+                startNewPath(Point(x, y))
                 true
             }
             MotionEvent.ACTION_MOVE -> {
@@ -97,6 +78,7 @@ class CanvasView(context: Context, tPoints: List<Point>, val AddPointToViewModel
 
     data class PathWrapper(
         val path: Path,
+        val startPoint: Point,
         val paint: Paint
     )
 
