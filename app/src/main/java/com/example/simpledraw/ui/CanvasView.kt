@@ -11,46 +11,54 @@ import android.view.MotionEvent
 import android.view.View
 
 @SuppressLint("ViewConstructor")
-class CanvasView(context: Context, tPoints: List<Point>, val AddPointToViewModel: (Point) -> Unit) : View(context) {
+class CanvasView(
+    context: Context,
+    uiState: MutableList<PathWrapper>,
+    val startNewPathViewModel: (PathWrapper) -> Unit,
+    val updateLastPathViewModel: (Point) -> Unit
+) : View(context) {
 
     private val tag = "MyCanvas"
 
-    private val paths: MutableList<PathWrapper> = mutableListOf()
+    var paths: MutableList<PathWrapper> = uiState
 
     var currentStrokeWidth = 10f
     var currentColor = Color.RED
     var currentBgColor = Color.rgb(255, 255, 255)
 
     private fun updateLatestPath(newPoint: Point) {
-        val path = paths.last().path
-        if (path.isEmpty) {
-            path.moveTo(newPoint.x, newPoint.y)
-        } else {
-            path.lineTo(newPoint.x, newPoint.y)
-        }
+        paths.last().pointCount++
+        paths.last().path.lineTo(newPoint.x, newPoint.y)
+        updateLastPathViewModel(newPoint)
         invalidate()
     }
 
     private fun startNewPath(newPoint: Point) {
         val pathWrapper = PathWrapper(
-            path = Path(),
+            path = Path().apply {
+                this.moveTo(newPoint.x, newPoint.y)
+            },
             startPoint = newPoint,
-            paint = Paint().apply {
-                this.style = Paint.Style.STROKE
+            pointCount = 1,
+            paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 this.color = currentColor
                 this.strokeWidth = currentStrokeWidth
+                this.style = Paint.Style.STROKE
+                this.strokeCap = Paint.Cap.ROUND
+                this.strokeJoin = Paint.Join.ROUND
             }
         )
+        startNewPathViewModel(pathWrapper)
         paths.add(pathWrapper)
         invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
         paths.forEach {
-            if (!it.path.isEmpty) {
+            if (it.pointCount > 3) {
                 canvas.drawPath(it.path, it.paint)
             } else {
-                canvas.drawCircle(it.startPoint.x, it.startPoint.y, it.paint.strokeWidth, it.paint)
+                canvas.drawPoint(it.startPoint.x, it.startPoint.y, it.paint)
             }
         }
     }
@@ -79,6 +87,7 @@ class CanvasView(context: Context, tPoints: List<Point>, val AddPointToViewModel
     data class PathWrapper(
         val path: Path,
         val startPoint: Point,
+        var pointCount: Int,
         val paint: Paint
     )
 

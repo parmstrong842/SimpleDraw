@@ -1,23 +1,38 @@
 package com.example.simpledraw.ui
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.*
 import com.example.simpledraw.ui.CanvasView.Point
+import com.example.simpledraw.ui.CanvasView.PathWrapper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 data class CanvasUiState(
-    val points: List<Point>
+    val paths: MutableList<PathWrapper>
 )
 
 class CanvasViewModel: ViewModel() {
 
-    private val _uiState: MutableStateFlow<CanvasUiState> = MutableStateFlow(CanvasUiState(listOf()))
-    val uiState: StateFlow<CanvasUiState> = _uiState.asStateFlow()
+    var paths: MutableList<PathWrapper> = mutableListOf()
 
-    fun addPoint(point: Point) {
-        val newPoints: MutableList<Point> = _uiState.value.points.toMutableList()
-        newPoints.add(point)
+    private val _uiState: MutableStateFlow<CanvasUiState> = MutableStateFlow(CanvasUiState(mutableListOf()))
+    val uiState = _uiState.asStateFlow()
+
+    fun startNewPathViewModel(path: PathWrapper) {
+        paths.add(path)
+    }
+
+    fun updateLastPathViewModel(newPoint: Point) {
+        paths.last().pointCount++
+        paths.last().path.lineTo(newPoint.x, newPoint.y)
+    }
+
+    fun reset() {
+        paths = mutableListOf()
         _uiState.update {
-            it.copy(points = newPoints)
+            it.copy(
+                paths = mutableListOf()
+            )
         }
     }
 }
