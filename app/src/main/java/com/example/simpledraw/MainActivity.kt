@@ -35,10 +35,10 @@ class MainActivity : ComponentActivity() {
                             Row(
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                IconButton(onClick = { /*TODO*/ }) {
+                                IconButton(onClick = { viewModel.undo() }) {
                                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                                 }
-                                IconButton(onClick = { /*TODO*/ }) {
+                                IconButton(onClick = { viewModel.redo() }) {
                                     Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Forward")
                                 }
                                 IconButton(onClick = { viewModel.reset() }) {

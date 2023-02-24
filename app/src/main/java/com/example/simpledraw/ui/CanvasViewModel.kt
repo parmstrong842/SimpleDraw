@@ -27,6 +27,22 @@ class CanvasViewModel: ViewModel() {
         paths.last().path.lineTo(newPoint.x, newPoint.y)
     }
 
+    fun undo() {
+        if (uiState.value.paths.isNotEmpty()) {
+            val newList = uiState.value.paths.toMutableList()
+            newList.remove(newList.last())
+            _uiState.update {
+                it.copy(
+                    paths = newList
+                )
+            }
+        }
+    }
+
+    fun redo() {
+
+    }
+
     fun reset() {
         paths = mutableListOf()
         _uiState.update {
