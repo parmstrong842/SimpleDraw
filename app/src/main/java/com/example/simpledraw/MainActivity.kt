@@ -1,6 +1,7 @@
 package com.example.simpledraw
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
@@ -19,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.simpledraw.ui.CanvasView
 import com.example.simpledraw.ui.CanvasViewModel
 import com.example.simpledraw.ui.theme.SimpleDrawTheme
+import yuku.ambilwarna.AmbilWarnaDialog
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -27,22 +33,66 @@ class MainActivity : ComponentActivity() {
         setContent {
             SimpleDrawTheme {
                 val viewModel: CanvasViewModel = viewModel()
-                val uiState by viewModel.uiState.collectAsState()
+                val context = LocalContext.current
+                val canvasView = remember {
+                    CanvasView(
+                        context = context,
+                        pathsState = viewModel.paths,
+                        redoPathsState = viewModel.redoPaths,
+                        currentColor = viewModel.currentColor,
+                        startNewPathViewModel = { viewModel.startNewPath(it) },
+                        updateLastPathViewModel = { viewModel.updateLastPath(it) }
+                    )
+                }
 
                 Scaffold(
                     topBar = {
-                        Column() {
+                        Column {
                             Row(
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                IconButton(onClick = { viewModel.undo() }) {
+                                IconButton(onClick = {
+                                    viewModel.undo()
+                                    canvasView.undo()
+                                }) {
                                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                                 }
-                                IconButton(onClick = { viewModel.redo() }) {
+                                IconButton(onClick = {
+                                    viewModel.redo()
+                                    canvasView.redo()
+                                }) {
                                     Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Forward")
                                 }
-                                IconButton(onClick = { viewModel.reset() }) {
+                                IconButton(onClick = {
+                                    viewModel.reset()
+                                    canvasView.reset()
+                                }) {
                                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Reset")
+                                }
+                                var paletteColor by remember { mutableStateOf(canvasView.currentColor) }
+                                IconButton(onClick = {
+                                    val handler = object: AmbilWarnaDialog.OnAmbilWarnaListener {
+                                        override fun onOk(dialog: AmbilWarnaDialog?, color: Int) {
+                                            viewModel.currentColor = color
+                                            canvasView.currentColor = color
+                                            paletteColor = color
+                                        }
+                                        override fun onCancel(dialog: AmbilWarnaDialog?) {}
+                                    }
+                                    AmbilWarnaDialog(
+                                        context,
+                                        canvasView.currentColor,
+                                        handler
+                                    ).show()
+                                }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.palette_24px),
+                                        contentDescription = "palette",
+                                        modifier = Modifier.drawBehind {
+                                            Log.d("MainActivity", "$size")
+                                            drawCircle(Color(paletteColor), size.height)
+                                        },
+                                    )
                                 }
                             }
                         }
@@ -52,18 +102,11 @@ class MainActivity : ComponentActivity() {
 
                     Box {
                         AndroidView(modifier = Modifier.fillMaxSize(),
-                            factory = { context ->
-                                CanvasView(
-                                    context = context,
-                                    uiState = viewModel.paths,
-                                    startNewPathViewModel = { viewModel.startNewPathViewModel(it) },
-                                    updateLastPathViewModel = { viewModel.updateLastPathViewModel(it) }
-                                )
+                            factory = {
+                                canvasView
                             },
                             update = {
                                 it.currentStrokeWidth = sliderPosition * 70
-                                it.paths = uiState.paths
-                                it.invalidate()
                             }
                         )
 

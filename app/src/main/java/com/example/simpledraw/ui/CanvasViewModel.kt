@@ -1,54 +1,43 @@
 package com.example.simpledraw.ui
 
+import android.graphics.Color
 import androidx.lifecycle.ViewModel
 import com.example.simpledraw.ui.CanvasView.Point
 import com.example.simpledraw.ui.CanvasView.PathWrapper
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-
-data class CanvasUiState(
-    val paths: MutableList<PathWrapper>
-)
 
 class CanvasViewModel: ViewModel() {
 
-    var paths: MutableList<PathWrapper> = mutableListOf()
+    val paths: MutableList<PathWrapper> = mutableListOf()
+    val redoPaths: MutableList<PathWrapper> = mutableListOf()
+    var currentColor = Color.RED
 
-    private val _uiState: MutableStateFlow<CanvasUiState> = MutableStateFlow(CanvasUiState(mutableListOf()))
-    val uiState = _uiState.asStateFlow()
 
-    fun startNewPathViewModel(path: PathWrapper) {
-        paths.add(path)
-    }
-
-    fun updateLastPathViewModel(newPoint: Point) {
+    fun updateLastPath(newPoint: Point) {
         paths.last().pointCount++
         paths.last().path.lineTo(newPoint.x, newPoint.y)
     }
 
+    fun startNewPath(path: PathWrapper) {
+        paths.add(path)
+        redoPaths.clear()
+    }
+
     fun undo() {
-        if (uiState.value.paths.isNotEmpty()) {
-            val newList = uiState.value.paths.toMutableList()
-            newList.remove(newList.last())
-            _uiState.update {
-                it.copy(
-                    paths = newList
-                )
-            }
+        if (paths.isNotEmpty()) {
+            redoPaths.add(paths.last())
+            paths.remove(paths.last())
         }
     }
 
     fun redo() {
-
+        if (redoPaths.isNotEmpty()) {
+            paths.add(redoPaths.last())
+            redoPaths.remove(redoPaths.last())
+        }
     }
 
     fun reset() {
-        paths = mutableListOf()
-        _uiState.update {
-            it.copy(
-                paths = mutableListOf()
-            )
-        }
+        paths.clear()
+        redoPaths.clear()
     }
 }
