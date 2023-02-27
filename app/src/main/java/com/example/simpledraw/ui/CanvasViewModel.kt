@@ -1,6 +1,7 @@
 package com.example.simpledraw.ui
 
 import android.graphics.Color
+import android.graphics.PathEffect
 import androidx.lifecycle.ViewModel
 import com.example.simpledraw.ui.CanvasView.Point
 import com.example.simpledraw.ui.CanvasView.PathWrapper
@@ -10,6 +11,7 @@ class CanvasViewModel: ViewModel() {
     val paths: MutableList<PathWrapper> = mutableListOf()
     val redoPaths: MutableList<PathWrapper> = mutableListOf()
     var currentColor = Color.RED
+    var currentPathEffect: PathEffect? = null
 
 
     fun updateLastPath(newPoint: Point) {

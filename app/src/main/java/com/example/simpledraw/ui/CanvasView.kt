@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PathEffect
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -22,13 +23,11 @@ class CanvasView(
 
     private val tag = "MyCanvas"
 
-    init {
-        Log.d(tag, "CanvasView init")
-    }
-
     private val paths: MutableList<PathWrapper> = pathsState
     private val redoPaths: MutableList<PathWrapper> = redoPathsState
+
     var currentStrokeWidth = 10f
+    var currentPathEffect: PathEffect? = null
     var currentBgColor = Color.rgb(255, 255, 255)
 
     private fun updateLatestPath(newPoint: Point) {
@@ -45,12 +44,13 @@ class CanvasView(
             },
             startPoint = newPoint,
             pointCount = 1,
-            paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            paint = Paint().apply {
                 this.color = currentColor
                 this.strokeWidth = currentStrokeWidth
                 this.style = Paint.Style.STROKE
                 this.strokeCap = Paint.Cap.ROUND
                 this.strokeJoin = Paint.Join.ROUND
+                this.pathEffect = currentPathEffect
             }
         )
         startNewPathViewModel(pathWrapper)
@@ -110,6 +110,11 @@ class CanvasView(
             }
             else -> super.onTouchEvent(event)
         }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        setBackgroundColor(Color.WHITE)
+        super.onSizeChanged(w, h, oldw, oldh)
     }
 
     data class PathWrapper(
