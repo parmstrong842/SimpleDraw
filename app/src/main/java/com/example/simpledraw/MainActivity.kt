@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.drawToBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -140,11 +141,50 @@ class MainActivity : ComponentActivity() {
 
                                 Spacer(modifier = Modifier.weight(1f))
 
-                                IconButton(onClick = {
-                                    viewModel.reset()
-                                    canvasView.reset()
-                                }) {
+                                var openDialog by remember { mutableStateOf(false) }
+                                IconButton(onClick = { openDialog = true }) {
                                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Reset")
+                                }
+
+                                if (openDialog) {
+                                    AlertDialog(
+                                        onDismissRequest = {
+                                            openDialog = false
+                                        }
+                                    ) {
+                                        Surface(
+                                            modifier = Modifier
+                                                .wrapContentWidth()
+                                                .wrapContentHeight(),
+                                            shape = MaterialTheme.shapes.large
+                                        ) {
+                                            Column(modifier = Modifier.padding(16.dp).width(IntrinsicSize.Max)) {
+                                                Text(
+                                                    text = "Are you sure you want to delete?"
+                                                )
+                                                Spacer(modifier = Modifier.height(24.dp))
+                                                Row {
+                                                    TextButton(
+                                                        onClick = {
+                                                            openDialog = false
+                                                        },
+                                                    ) {
+                                                        Text("Back")
+                                                    }
+                                                    Spacer(modifier = Modifier.weight(1f))
+                                                    TextButton(
+                                                        onClick = {
+                                                            openDialog = false
+                                                            viewModel.reset()
+                                                            canvasView.reset()
+                                                        },
+                                                    ) {
+                                                        Text("Confirm")
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
