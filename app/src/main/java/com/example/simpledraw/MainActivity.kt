@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -36,12 +37,9 @@ import yuku.ambilwarna.AmbilWarnaDialog
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-//TODO add path effects
 //TODO make paths smoother
 //TODO zoom
-//TODO change background color
 //TODO multi-touch
-//TODO dialog when you delete
 class MainActivity : ComponentActivity() {
 
     private val tag = "MainActivity"
@@ -84,7 +82,6 @@ class MainActivity : ComponentActivity() {
                                     Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Forward")
                                 }
 
-                                //TODO grey circle is bigger than palette circle
                                 var toggle by remember { mutableStateOf(false) }
                                 IconButton(
                                     onClick = {
@@ -99,8 +96,8 @@ class MainActivity : ComponentActivity() {
                                         toggle = !toggle
                                     },
                                     modifier = if (toggle) Modifier.drawBehind {
-                                        Log.d(tag, "$size")
-                                        drawCircle(Color.Gray, size.height/2)
+                                        //Log.d(tag, "$size")
+                                        drawCircle(Color.Gray, size.height/2-10)
                                     } else Modifier
                                 ) {
                                     Icon(
@@ -129,9 +126,33 @@ class MainActivity : ComponentActivity() {
                                         painter = painterResource(R.drawable.palette_24px),
                                         contentDescription = "palette",
                                         modifier = Modifier.drawBehind {
-                                            Log.d(tag, "$size")
+                                            //Log.d(tag, "palette ${size.height}")
                                             drawCircle(Color(paletteColor), size.height)
                                         },
+                                    )
+                                }
+
+                                IconButton(onClick = {
+                                    val handler = object: AmbilWarnaDialog.OnAmbilWarnaListener {
+                                        override fun onOk(dialog: AmbilWarnaDialog?, color: Int) {
+                                            viewModel.currentBgColor = color
+                                            canvasView.currentBgColor = color
+                                        }
+                                        override fun onCancel(dialog: AmbilWarnaDialog?) {}
+                                    }
+                                    AmbilWarnaDialog(
+                                        context,
+                                        canvasView.currentBgColor,
+                                        handler
+                                    ).show()
+                                }) {
+                                    Icon(
+                                        painterResource(R.drawable.format_color_fill_24px),
+                                        contentDescription = null,
+                                        modifier = Modifier.drawBehind {
+                                            Log.d(tag, "bucket ${size.height/2+17}")
+                                            drawCircle(Color.White, size.height/2+19, style = Stroke(5f))
+                                        }
                                     )
                                 }
 
@@ -158,7 +179,9 @@ class MainActivity : ComponentActivity() {
                                                 .wrapContentHeight(),
                                             shape = MaterialTheme.shapes.large
                                         ) {
-                                            Column(modifier = Modifier.padding(16.dp).width(IntrinsicSize.Max)) {
+                                            Column(modifier = Modifier
+                                                .padding(16.dp)
+                                                .width(IntrinsicSize.Max)) {
                                                 Text(
                                                     text = "Are you sure you want to delete?"
                                                 )
@@ -168,6 +191,7 @@ class MainActivity : ComponentActivity() {
                                                         onClick = {
                                                             openDialog = false
                                                         },
+                                                        modifier = Modifier.padding(start = 16.dp)
                                                     ) {
                                                         Text("Back")
                                                     }
@@ -178,6 +202,7 @@ class MainActivity : ComponentActivity() {
                                                             viewModel.reset()
                                                             canvasView.reset()
                                                         },
+                                                        modifier = Modifier.padding(end = 16.dp)
                                                     ) {
                                                         Text("Confirm")
                                                     }

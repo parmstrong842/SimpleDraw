@@ -11,6 +11,7 @@ class CanvasViewModel: ViewModel() {
     val paths: MutableList<PathWrapper> = mutableListOf()
     val redoPaths: MutableList<PathWrapper> = mutableListOf()
     var currentColor = Color.RED
+    var currentBgColor = Color.WHITE
     var currentPathEffect: PathEffect? = null
 
 

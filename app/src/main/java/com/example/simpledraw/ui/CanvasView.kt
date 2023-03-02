@@ -28,7 +28,11 @@ class CanvasView(
 
     var currentStrokeWidth = 10f
     var currentPathEffect: PathEffect? = null
-    var currentBgColor = Color.rgb(255, 255, 255)
+    var currentBgColor = Color.WHITE
+        set(value) {
+            field = value
+            setBackgroundColor(currentBgColor)
+        }
 
     private fun updateLatestPath(newPoint: Point) {
         paths.last().pointCount++
@@ -50,6 +54,7 @@ class CanvasView(
                 this.style = Paint.Style.STROKE
                 this.strokeCap = Paint.Cap.ROUND
                 this.strokeJoin = Paint.Join.ROUND
+                this.isAntiAlias = true
                 this.pathEffect = currentPathEffect
             }
         )
@@ -99,7 +104,7 @@ class CanvasView(
 
         return when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                //Log.d(tag, "Action was DOWN")
+                Log.d(tag, "Action was DOWN")
                 startNewPath(Point(x, y))
                 true
             }
@@ -113,7 +118,7 @@ class CanvasView(
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        setBackgroundColor(Color.WHITE)
+        setBackgroundColor(currentBgColor)
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
